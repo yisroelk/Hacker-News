@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import time
 
 BASE_URL = "https://hacker-news.firebaseio.com/v0/"
 TOP_STORIES_URL = BASE_URL + "topstories.json"
@@ -11,6 +12,12 @@ COMMENTS_CSV = "comments.csv"
 STATS_CSV = "summary_stats.csv"
 NUM_TOP_STORIES = 3  # Number of top stories to fetch and process
 
+comments_ids = []
+start_time = 0
+end_time = 0
+time_top_stories = 0
+time_story_details = 0
+time_comment_details = 0
 
 def fetch_top_stories():
     """
@@ -19,7 +26,10 @@ def fetch_top_stories():
     Returns:
         list: A list of IDs of the top stories limited to NUM_TOP_STORIES.
     """
+    s = time.time()
     response = requests.get(TOP_STORIES_URL)
+    global time_top_stories
+    time_top_stories = time.time() - s
     top_stories = response.json()
     return top_stories[:NUM_TOP_STORIES]  # limiting top stories num
 
@@ -33,7 +43,10 @@ def fetch_story_details(story_id):
     Returns:
         dict: A dictionary containing the story details.
     """
+    s = time.time()
     response = requests.get(ITEM_URL.format(story_id))
+    global time_story_details
+    time_story_details = time_story_details + (time.time() - s)
     story_details = response.json()
     return story_details
 
@@ -47,7 +60,10 @@ def fetch_comment_details(comment_id):
     Returns:
         dict: A dictionary containing the comment details.
     """
+    s = time.time()
     response = requests.get(ITEM_URL.format(comment_id))
+    global time_comment_details
+    time_comment_details = time_comment_details + (time.time() - s)
     comment_details = response.json()
     return comment_details
 
@@ -124,7 +140,7 @@ def main():
     save_top_stories_to_csv(top_stories)
 
     # Fetch and save all comments IDs
-    comments_ids = []
+    
     for i in tqdm(range(len(top_stories)), desc="Fetching comment IDs..."):
         story = top_stories[i]
         if 'kids' in story:
@@ -144,8 +160,16 @@ def main():
     # Analyze and save stats
     stats = analyze_and_save_stats(top_stories)
     
+    global end_time
+    end_time = time.time()
+    print("totul time:", end_time - start_time)
+    print("Total requests time:", time_top_stories + time_story_details + time_comment_details)
+    print("Average request time for story details:", time_story_details / NUM_TOP_STORIES)
+    print("Average request time for comment details:", time_comment_details / len(comments_ids))
+    
     # Plot stats
     plot_stats(stats)
 
 if __name__ == "__main__":
+    start_time = time.time()
     main()
