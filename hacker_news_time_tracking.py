@@ -46,7 +46,7 @@ def fetch_story_details(story_id):
     s = time.time()
     response = requests.get(ITEM_URL.format(story_id))
     global time_story_details
-    time_story_details = time_story_details + (time.time() - s)
+    time_story_details += (time.time() - s)
     story_details = response.json()
     return story_details
 
@@ -63,7 +63,7 @@ def fetch_comment_details(comment_id):
     s = time.time()
     response = requests.get(ITEM_URL.format(comment_id))
     global time_comment_details
-    time_comment_details = time_comment_details + (time.time() - s)
+    time_comment_details += (time.time() - s)
     comment_details = response.json()
     return comment_details
 
